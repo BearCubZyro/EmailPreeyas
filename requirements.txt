@@ -1,4 +1,3 @@
-smtplib
-email.message
+numpy
 
 
