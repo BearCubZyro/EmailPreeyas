@@ -1,58 +1,65 @@
+import os
 import random
 import smtplib
 from email.message import EmailMessage
+import streamlit as st
 
-pushpa = False
-# Generate OTP
-otp = ""
-for i in range(6):
-    otp += str(random.randint(0, 9))
+# Environment variables
+EMAIL_USERNAME = os.environ['EMAIL_USERNAME']
+EMAIL_PASSWORD = os.environ['EMAIL_PASSWORD']
 
-print("OTP:", otp)
+def generate_otp():
+    """Generate a 6-digit OTP"""
+    otp = "".join(str(random.randint(0, 9)) for _ in range(6))
+    return otp
 
-# Establish connection with SMTP server
-server = smtplib.SMTP('smtp.gmail.com', 587)
-server.starttls()
+def send_email(to_email, otp):
+    """Send an email with the OTP"""
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(EMAIL_USERNAME, EMAIL_PASSWORD)
+    msg = EmailMessage()
+    msg['Subject'] = "OTP VERIFICATION"
+    msg['From'] = EMAIL_USERNAME
+    msg['To'] = to_email
+    msg.set_content("YOUR OTP IS: " + otp + "Do not share it with anyone else")
+    try:
+        server.send_message(msg)
+        print("Email sent")
+    except Exception as e:
+        print("Error sending email:", e)
+    finally:
+        server.quit()
 
-from_mail = 'preeyastumulu@gmail.com'
-password = 'npjr xiub egwt oddx'  # Your email password, not 'from_mail'
+def verify_otp(otp, input_otp):
+    """Verify the OTP"""
+    if input_otp == otp:
+        return True
+    else:
+        return False
 
-# Login to your email account
-server.login(from_mail, password)
-
-to_mail = input("Enter your Email: ")
-
-msg = EmailMessage()
-msg['Subject'] = "OTP VERIFICATION"
-msg['From'] = from_mail
-msg['To'] = to_mail
-msg.set_content("YOUR OTP IS: " + otp + "Do not share it with anyone else")
-
-# Send email try and except block
-server.send_message(msg)
-print("Email sent")
-
-# Close the connection
-
-input_otp=input("Enter OTP :")
-if input_otp==otp:
-    print("OTP verified")
-    pushpa = True
-    # print(pushpa)
-else :
-    print("Invalid OTP ")    
-    pushpa = False
-
-if pushpa:
-    print("1. Akhila project?")
-    print("2. Rudra project?")
-    choice = int(input("Which do you want?"))
+def main():
+    st.title("OTP Verification")
+    to_email = st.text_input("Enter your Email:")
+    otp = generate_otp()
+    st.write("OTP:", otp)
+    send_email(to_email, otp)
+    input_otp = st.text_input("Enter OTP:")
+    if verify_otp(otp, input_otp):
+        st.write("OTP verified")
+        pushpa = True
+    else:
+        st.write("Invalid OTP")
+        pushpa = False
     
-    if choice == 1:
-        # rudraKaCode()
-        print("Rudra")
-    elif choice == 2:
-        # akhilaKaCode()
-        print("Akhila")
+    if pushpa:
+        st.write("1. Akhila project?")
+        st.write("2. Rudra project?")
+        choice = st.selectbox("Which do you want?", [1, 2])
+        if choice == 1:
+            st.write("Rudra")
+        elif choice == 2:
+            st.write("Akhila")
 
-server.quit()
+if __name__ == "__main__":
+    main()
